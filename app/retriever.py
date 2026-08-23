@@ -21,30 +21,53 @@ def load_vector_store():
     return vector_store
 
 
-def retrieve_documents(question, k=3):
+def retrieve_documents(question, k=5, score_threshold=1.0):
 
     vector_store = load_vector_store()
 
-    documents = vector_store.similarity_search(
+    results = vector_store.similarity_search_with_score(
         question,
         k=k
     )
 
-    return documents
+    filtered_results = []
+
+    for document, score in results:
+
+        if score <= score_threshold:
+            filtered_results.append((document, score))
+
+    return filtered_results
 
 
 if __name__ == "__main__":
 
     question = input("Enter your question: ")
 
-    documents = retrieve_documents(question)
+    results = retrieve_documents(
+        question,
+        k=5,
+        score_threshold=1.0
+    )
 
-    print("\nRetrieved Documents:")
+    print("\nRetrieved Documents After Threshold:")
     print("=" * 60)
 
-    for i, document in enumerate(documents, start=1):
+    if not results:
 
-        print(f"\nResult {i}")
-        print("-" * 60)
+        print("No sufficiently relevant documents found.")
 
-        print(document.page_content)
+    else:
+
+        for i, (document, score) in enumerate(results, start=1):
+
+            print(f"\nResult {i}")
+            print("-" * 60)
+
+            print(f"Distance Score: {score}")
+
+            print("\nContent:")
+            print(document.page_content)
+
+            print("\nMetadata:")
+            print(document.metadata)
