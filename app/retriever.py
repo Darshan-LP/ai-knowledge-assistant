@@ -21,7 +21,7 @@ def load_vector_store():
     return vector_store
 
 
-def retrieve_documents(question, k=5, score_threshold=1.0):
+def retrieve_documents(question, k=5, threshold=1.0):
 
     vector_store = load_vector_store()
 
@@ -30,14 +30,14 @@ def retrieve_documents(question, k=5, score_threshold=1.0):
         k=k
     )
 
-    filtered_results = []
+    filtered_documents = []
 
     for document, score in results:
 
-        if score <= score_threshold:
-            filtered_results.append((document, score))
+        if score <= threshold:
+            filtered_documents.append(document)
 
-    return filtered_results
+    return filtered_documents
 
 
 if __name__ == "__main__":

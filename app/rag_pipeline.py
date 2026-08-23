@@ -4,13 +4,34 @@ from llm import create_llm_client
 
 def build_context(documents):
 
-    context = ""
+    context_parts = []
 
-    for document in documents:
-        context += document.page_content
-        context += "\n\n"
+    for i, document in enumerate(documents, start=1):
 
-    return context
+        source = document.metadata.get(
+            "source",
+            "Unknown"
+        )
+
+        page = document.metadata.get(
+            "page_label",
+            "Unknown"
+        )
+
+        content = document.page_content
+
+        context_parts.append(
+            f"""
+SOURCE {i}
+Document: {source}
+Page: {page}
+
+Content:
+{content}
+"""
+        )
+
+    return "\n".join(context_parts)
 
 
 def generate_rag_answer(question):
@@ -18,7 +39,7 @@ def generate_rag_answer(question):
     # Step 1: Retrieve relevant documents
     documents = retrieve_documents(
         question,
-        k=2
+        k=5
     )
 
     # Step 2: Build context
@@ -29,14 +50,16 @@ def generate_rag_answer(question):
 You are a helpful AI assistant.
 
 Answer the user's question using ONLY the information
-provided in the context below.
+provided in the sources below.
 
-If the answer cannot be found in the context,
-say: "I couldn't find the answer in the provided document."
+Rules:
+1. Do not use outside knowledge.
+2. If the answer is not present in the sources, say:
+   "I couldn't find the answer in the provided document."
+3. Do not invent facts.
+4. Give a concise and direct answer.
 
-Do not use outside knowledge.
-
-Context:
+Sources:
 --------------------
 {context}
 --------------------
@@ -67,7 +90,7 @@ Answer:
 
 if __name__ == "__main__":
 
-    question = "How many sick leave days are provided?"
+    question = "What is the company's office dress code?"
 
     answer, documents = generate_rag_answer(question)
 
