@@ -22,7 +22,7 @@ def build_context(documents):
 
         context_parts.append(
             f"""
-SOURCE {i}
+SOURCE [{i}]
 Document: {source}
 Page: {page}
 Relevance Score: {score}
@@ -43,10 +43,18 @@ def generate_rag_answer(question):
         k=5
     )
 
-    # Step 2: Build context
+    # Step 2: If no relevant documents were found
+    if not documents:
+
+        return (
+            "I couldn't find the answer in the provided document.",
+            documents
+        )
+
+    # Step 3: Build context
     context = build_context(documents)
 
-    # Step 3: Create prompt
+    # Step 4: Create prompt
     prompt = f"""
 You are a helpful AI assistant.
 
@@ -54,11 +62,14 @@ Answer the user's question using ONLY the information
 provided in the sources below.
 
 Rules:
+
 1. Do not use outside knowledge.
 2. If the answer is not present in the sources, say:
    "I couldn't find the answer in the provided document."
 3. Do not invent facts.
 4. Give a concise and direct answer.
+5. When using information from a source, include its source
+   number in square brackets, for example [1] or [2].
 
 Sources:
 --------------------
@@ -71,7 +82,7 @@ User Question:
 Answer:
 """
 
-    # Step 4: Send prompt to LLM
+    # Step 5: Send prompt to LLM
     client = create_llm_client()
 
     response = client.chat.completions.create(
@@ -105,8 +116,27 @@ if __name__ == "__main__":
     print("\nSources:")
     print("=" * 60)
 
-    for document, score in documents:
-        print("Document:", document.metadata.get("source", "Unknown"))
-        print("Page:", document.metadata.get("page_label", "Unknown"))
-        print("Score:", score)
-        print()
+    if documents:
+
+        for i, (document, score) in enumerate(documents, start=1):
+
+            source = document.metadata.get(
+                "source",
+                "Unknown"
+            )
+
+            page = document.metadata.get(
+                "page_label",
+                "Unknown"
+            )
+
+            # Get only the filename instead of full path
+            source_name = source.replace("\\", "/").split("/")[-1]
+
+            print(
+                f"[{i}] {source_name} — Page {page}"
+            )
+
+    else:
+
+        print("No sources found.")
