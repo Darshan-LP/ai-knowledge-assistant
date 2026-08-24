@@ -4,7 +4,7 @@ from chunker import create_chunks
 from loader import load_pdf
 
 
-MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+MODEL_NAME = "models/all-MiniLM-L6-v2"
 
 
 def create_embedding_model():

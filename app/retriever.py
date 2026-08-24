@@ -7,18 +7,26 @@ from embeddings import create_embedding_model
 
 VECTOR_STORE_PATH = Path("vectorstore")
 
+_vector_store = None
+
 
 def load_vector_store():
 
-    embeddings = create_embedding_model()
+    global _vector_store
 
-    vector_store = FAISS.load_local(
-        str(VECTOR_STORE_PATH),
-        embeddings,
-        allow_dangerous_deserialization=True
-    )
+    if _vector_store is None:
 
-    return vector_store
+        print("Loading FAISS vector store...")
+
+        embeddings = create_embedding_model()
+
+        _vector_store = FAISS.load_local(
+            str(VECTOR_STORE_PATH),
+            embeddings,
+            allow_dangerous_deserialization=True
+        )
+
+    return _vector_store
 
 
 def retrieve_documents(question, k=5, threshold=1.0):
@@ -35,7 +43,7 @@ def retrieve_documents(question, k=5, threshold=1.0):
     for document, score in results:
 
         if score <= threshold:
-            filtered_documents.append(document)
+            filtered_documents.append((document, score))
 
     return filtered_documents
 
@@ -47,7 +55,7 @@ if __name__ == "__main__":
     results = retrieve_documents(
         question,
         k=5,
-        score_threshold=1.0
+        threshold=1.0
     )
 
     print("\nRetrieved Documents After Threshold:")

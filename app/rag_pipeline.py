@@ -6,7 +6,7 @@ def build_context(documents):
 
     context_parts = []
 
-    for i, document in enumerate(documents, start=1):
+    for i, (document, score) in enumerate(documents, start=1):
 
         source = document.metadata.get(
             "source",
@@ -25,6 +25,7 @@ def build_context(documents):
 SOURCE {i}
 Document: {source}
 Page: {page}
+Relevance Score: {score}
 
 Content:
 {content}
@@ -90,7 +91,7 @@ Answer:
 
 if __name__ == "__main__":
 
-    question = "What is the company's office dress code?"
+    question = "How many sick leave days are provided?"
 
     answer, documents = generate_rag_answer(question)
 
@@ -104,5 +105,8 @@ if __name__ == "__main__":
     print("\nSources:")
     print("=" * 60)
 
-    for document in documents:
-        print(document.metadata)
+    for document, score in documents:
+        print("Document:", document.metadata.get("source", "Unknown"))
+        print("Page:", document.metadata.get("page_label", "Unknown"))
+        print("Score:", score)
+        print()
