@@ -2,6 +2,11 @@ from retriever import retrieve_documents
 from llm import create_llm_client
 
 
+FALLBACK_ANSWER = (
+    "I couldn't find the answer in the provided document."
+)
+
+
 def build_context(documents):
 
     context_parts = []
@@ -25,7 +30,6 @@ def build_context(documents):
 SOURCE [{i}]
 Document: {source}
 Page: {page}
-Relevance Score: {score}
 
 Content:
 {content}
@@ -40,38 +44,41 @@ def generate_rag_answer(question):
     # Step 1: Retrieve relevant documents
     documents = retrieve_documents(
         question,
-        k=5
+        k=5,
+        threshold=1.5
     )
 
-    # Step 2: If no relevant documents were found
+    # Step 2: Stop if no relevant documents were found
     if not documents:
 
-        return (
-            "I couldn't find the answer in the provided document.",
-            documents
-        )
+        return FALLBACK_ANSWER, documents
 
-    # Step 3: Build context
+    # Step 3: Build context from retrieved documents
     context = build_context(documents)
 
-    # Step 4: Create prompt
+    # Step 4: Create a strict RAG prompt
     prompt = f"""
-You are a helpful AI assistant.
+You are a document-based AI assistant.
 
-Answer the user's question using ONLY the information
-provided in the sources below.
+Your job is to answer the user's question using ONLY
+the information contained in the provided sources.
 
-Rules:
+IMPORTANT RULES:
 
-1. Do not use outside knowledge.
-2. If the answer is not present in the sources, say:
-   "I couldn't find the answer in the provided document."
-3. Do not invent facts.
-4. Give a concise and direct answer.
-5. When using information from a source, include its source
-   number in square brackets, for example [1] or [2].
+1. Use ONLY the provided sources to answer the question.
+2. Do NOT use your general knowledge.
+3. Do NOT make assumptions or guesses.
+4. Do NOT invent or create information that is not present
+   in the sources.
+5. If the sources do not contain enough information to answer
+   the question, respond exactly with:
+   "{FALLBACK_ANSWER}"
+6. Keep the answer concise and direct.
+7. When an answer is supported by a source, include its
+   source number using [1], [2], etc.
+8. Only cite sources that actually support your answer.
 
-Sources:
+Retrieved Sources:
 --------------------
 {context}
 --------------------
@@ -83,10 +90,15 @@ Answer:
 """
 
     # Step 5: Send prompt to LLM
+    import time
+
     client = create_llm_client()
 
+    start_time = time.time()
+
     response = client.chat.completions.create(
-        model="openai/gpt-oss-120b:groq",
+        #model="openai/gpt-oss-120b:groq",
+        model="gpt-5-nano",
         messages=[
             {
                 "role": "user",
@@ -95,14 +107,19 @@ Answer:
         ]
     )
 
-    answer = response.choices[0].message.content
+    elapsed = time.time() - start_time
+
+    print(f"\nModel used: {response.model}")
+    print(f"Response time: {elapsed:.2f} seconds")
+    
+    answer = response.choices[0].message.content.strip()
 
     return answer, documents
 
 
 if __name__ == "__main__":
 
-    question = "How many sick leave days are provided?"
+    question = "How often are performance reviews conducted?"
 
     answer, documents = generate_rag_answer(question)
 
@@ -130,11 +147,18 @@ if __name__ == "__main__":
                 "Unknown"
             )
 
-            # Get only the filename instead of full path
-            source_name = source.replace("\\", "/").split("/")[-1]
+            source_name = source.replace(
+                "\\",
+                "/"
+            ).split("/")[-1]
+
+            chunk_id = document.metadata.get(
+                "chunk_id",
+                "Unknown"
+            )
 
             print(
-                f"[{i}] {source_name} — Page {page}"
+                f"[{i}] {source_name} — Page {page} — Chunk {chunk_id}"
             )
 
     else:

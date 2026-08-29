@@ -7,6 +7,9 @@ from embeddings import create_embedding_model
 
 VECTOR_STORE_PATH = Path("vectorstore")
 
+RETRIEVAL_K = 3
+RETRIEVAL_THRESHOLD = 1.5
+
 _vector_store = None
 
 
@@ -29,7 +32,11 @@ def load_vector_store():
     return _vector_store
 
 
-def retrieve_documents(question, k=5, threshold=1.0):
+def retrieve_documents(
+    question,
+    k=RETRIEVAL_K,
+    threshold=RETRIEVAL_THRESHOLD
+):
 
     vector_store = load_vector_store()
 
@@ -54,8 +61,8 @@ if __name__ == "__main__":
 
     results = retrieve_documents(
         question,
-        k=5,
-        threshold=1.0
+        k=RETRIEVAL_K,
+        threshold=RETRIEVAL_THRESHOLD
     )
 
     print("\nRetrieved Documents After Threshold:")
@@ -79,3 +86,8 @@ if __name__ == "__main__":
 
             print("\nMetadata:")
             print(document.metadata)
+
+            print(
+                "Chunk ID:",
+                document.metadata.get("chunk_id", "Missing")
+            )

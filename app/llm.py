@@ -10,8 +10,9 @@ load_dotenv()
 def create_llm_client():
 
     client = OpenAI(
-        base_url="https://router.huggingface.co/v1",
-        api_key=os.getenv("HF_TOKEN")
+       # base_url="https://router.huggingface.co/v1",
+        #api_key=os.getenv("HF_TOKEN")
+        api_key=os.getenv("OPENAI_API_KEY")
     )
 
     return client
@@ -22,7 +23,8 @@ def generate_answer(question):
     client = create_llm_client()
 
     response = client.chat.completions.create(
-        model="openai/gpt-oss-120b:groq",
+       # model="openai/gpt-oss-120b:groq",
+        model="gpt-5-nano",
         messages=[
             {
                 "role": "user",

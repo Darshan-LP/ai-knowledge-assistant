@@ -11,14 +11,15 @@ load_dotenv()
 # Create Hugging Face client
 client = OpenAI(
     base_url="https://router.huggingface.co/v1",
-    api_key=os.getenv("HF_TOKEN")
+    api_key=os.getenv("OPENAI_API_KEY")
 )
 
 
 def generate_answer(prompt):
 
     response = client.chat.completions.create(
-        model="openai/gpt-oss-120b:groq",
+       model="gpt-5-nano",
+
         messages=[
             {
                 "role": "user",
