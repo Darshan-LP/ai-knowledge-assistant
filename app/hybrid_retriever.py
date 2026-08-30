@@ -16,6 +16,8 @@ HYBRID_K = 3
 FAISS_WEIGHT = 0.70
 BM25_WEIGHT = 0.30
 
+HYBRID_THRESHOLD = 0.30
+
 
 # ======================================================
 # NORMALIZE BM25 SCORES
@@ -81,7 +83,6 @@ def normalize_faiss_scores(results):
     min_distance = min(distances)
     max_distance = max(distances)
 
-    # Avoid division by zero
     if max_distance == min_distance:
 
         return [
@@ -93,8 +94,6 @@ def normalize_faiss_scores(results):
 
     for document, distance in results:
 
-        # Convert distance into relevance.
-        # Smaller distance should produce higher score.
         relevance_score = (
             (max_distance - distance)
             /
@@ -237,10 +236,21 @@ def hybrid_retrieve(question):
     )
 
     # --------------------------------------------------
-    # 7. Return top results
+    # 7. Filter low-relevance results
     # --------------------------------------------------
 
-    return ranked_results[:HYBRID_K]
+    filtered_results = [
+        result
+        for result in ranked_results
+        if result["hybrid_score"] >= HYBRID_THRESHOLD
+    ]
+
+
+    # --------------------------------------------------
+    # 8. Return top relevant results
+    # --------------------------------------------------
+
+    return filtered_results[:HYBRID_K]
 
 
 # ======================================================
