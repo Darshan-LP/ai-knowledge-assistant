@@ -9,6 +9,7 @@ VECTOR_STORE_PATH = Path("vectorstore")
 
 RETRIEVAL_K = 3
 RETRIEVAL_THRESHOLD = 1.5
+MAX_RETRIEVED_DOCUMENTS = 3
 
 _vector_store = None
 
@@ -51,8 +52,12 @@ def retrieve_documents(
 
         if score <= threshold:
             filtered_documents.append((document, score))
+            
+    filtered_documents.sort(
+        key=lambda item: item[1]
+    )
 
-    return filtered_documents
+    return filtered_documents[:MAX_RETRIEVED_DOCUMENTS]
 
 
 if __name__ == "__main__":

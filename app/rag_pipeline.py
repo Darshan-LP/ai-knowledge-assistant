@@ -119,7 +119,7 @@ Answer:
 
 if __name__ == "__main__":
 
-    question = "How often are performance reviews conducted?"
+    question = "How many sick leave days are provided?"
 
     answer, documents = generate_rag_answer(question)
 
