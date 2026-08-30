@@ -1,4 +1,5 @@
 from retriever import retrieve_documents
+from query_transformer import transform_query
 from llm import create_llm_client
 
 
@@ -40,15 +41,21 @@ Content:
 
 
 def generate_rag_answer(question):
+    
+    # Step 1: Transform user question into a search-friendly query
+    search_query = transform_query(question)
 
-    # Step 1: Retrieve relevant documents
+    print(f"\nOriginal Question: {question}")
+    print(f"Search Query: {search_query}")
+
+    # Step 2: Retrieve relevant documents
     documents = retrieve_documents(
-        question,
+        search_query,
         k=5,
         threshold=1.5
     )
 
-    # Step 2: Stop if no relevant documents were found
+    # Step 2.1: Stop if no relevant documents were found
     if not documents:
 
         return FALLBACK_ANSWER, documents
@@ -119,7 +126,7 @@ Answer:
 
 if __name__ == "__main__":
 
-    question = "How many sick leave days are provided?"
+    question = "What is the company maternity bonus?"
 
     answer, documents = generate_rag_answer(question)
 
