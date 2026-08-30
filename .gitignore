@@ -7,3 +7,4 @@ vectorstore/
 .vscode/
 .idea/
 models/
+bm25_store/
