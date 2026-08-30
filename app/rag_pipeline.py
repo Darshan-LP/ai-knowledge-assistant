@@ -1,4 +1,4 @@
-from retriever import retrieve_documents
+from hybrid_retriever import hybrid_retrieve
 from query_transformer import transform_query
 from llm import create_llm_client
 
@@ -12,7 +12,7 @@ def build_context(documents):
 
     context_parts = []
 
-    for i, (document, score) in enumerate(documents, start=1):
+    for i, document in enumerate(documents, start=1):
 
         source = document.metadata.get(
             "source",
@@ -41,29 +41,58 @@ Content:
 
 
 def generate_rag_answer(question):
-    
-    # Step 1: Transform user question into a search-friendly query
+
+    # --------------------------------------------------
+    # Step 1: Transform user question
+    # --------------------------------------------------
+
     search_query = transform_query(question)
 
     print(f"\nOriginal Question: {question}")
     print(f"Search Query: {search_query}")
 
-    # Step 2: Retrieve relevant documents
-    documents = retrieve_documents(
-        search_query,
-        k=5,
-        threshold=1.5
+
+    # --------------------------------------------------
+    # Step 2: Hybrid Retrieval
+    # --------------------------------------------------
+
+    hybrid_results = hybrid_retrieve(
+        search_query
     )
 
-    # Step 2.1: Stop if no relevant documents were found
-    if not documents:
 
-        return FALLBACK_ANSWER, documents
+    # --------------------------------------------------
+    # Step 2.1: Stop if no documents found
+    # --------------------------------------------------
 
-    # Step 3: Build context from retrieved documents
-    context = build_context(documents)
+    if not hybrid_results:
 
-    # Step 4: Create a strict RAG prompt
+        return FALLBACK_ANSWER, []
+
+
+    # --------------------------------------------------
+    # Step 2.2: Extract documents from hybrid results
+    # --------------------------------------------------
+
+    documents = [
+        result["document"]
+        for result in hybrid_results
+    ]
+
+
+    # --------------------------------------------------
+    # Step 3: Build context
+    # --------------------------------------------------
+
+    context = build_context(
+        documents
+    )
+
+
+    # --------------------------------------------------
+    # Step 4: Create strict RAG prompt
+    # --------------------------------------------------
+
     prompt = f"""
 You are a document-based AI assistant.
 
@@ -96,7 +125,11 @@ User Question:
 Answer:
 """
 
+
+    # --------------------------------------------------
     # Step 5: Send prompt to LLM
+    # --------------------------------------------------
+
     import time
 
     client = create_llm_client()
@@ -104,7 +137,6 @@ Answer:
     start_time = time.time()
 
     response = client.chat.completions.create(
-        #model="openai/gpt-oss-120b:groq",
         model="gpt-5-nano",
         messages=[
             {
@@ -116,33 +148,66 @@ Answer:
 
     elapsed = time.time() - start_time
 
-    print(f"\nModel used: {response.model}")
-    print(f"Response time: {elapsed:.2f} seconds")
-    
-    answer = response.choices[0].message.content.strip()
+    print(
+        f"\nModel used: {response.model}"
+    )
+
+    print(
+        f"Response time: {elapsed:.2f} seconds"
+    )
+
+
+    # --------------------------------------------------
+    # Step 6: Extract answer
+    # --------------------------------------------------
+
+    answer = (
+        response
+        .choices[0]
+        .message
+        .content
+        .strip()
+    )
+
 
     return answer, documents
 
 
+# ======================================================
+# TEST
+# ======================================================
+
 if __name__ == "__main__":
 
-    question = "What is the company maternity bonus?"
+    question = input(
+        "Enter your question: "
+    )
 
-    answer, documents = generate_rag_answer(question)
+
+    answer, documents = generate_rag_answer(
+        question
+    )
+
 
     print("\nQuestion:")
     print(question)
+
 
     print("\nRAG Answer:")
     print("=" * 60)
     print(answer)
 
+
     print("\nSources:")
     print("=" * 60)
 
+
     if documents:
 
-        for i, (document, score) in enumerate(documents, start=1):
+        for i, document in enumerate(
+            documents,
+            start=1
+        ):
 
             source = document.metadata.get(
                 "source",
@@ -165,7 +230,9 @@ if __name__ == "__main__":
             )
 
             print(
-                f"[{i}] {source_name} — Page {page} — Chunk {chunk_id}"
+                f"[{i}] {source_name} "
+                f"— Page {page} "
+                f"— Chunk {chunk_id}"
             )
 
     else:
