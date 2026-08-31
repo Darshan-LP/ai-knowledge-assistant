@@ -1,5 +1,6 @@
 from hybrid_retriever import hybrid_retrieve
 from query_transformer import transform_query
+from reranker import rerank_documents
 from llm import create_llm_client
 
 
@@ -52,7 +53,7 @@ def generate_rag_answer(question):
     print(f"Search Query: {search_query}")
 
 
-    # --------------------------------------------------
+   # --------------------------------------------------
     # Step 2: Hybrid Retrieval
     # --------------------------------------------------
 
@@ -71,13 +72,43 @@ def generate_rag_answer(question):
 
 
     # --------------------------------------------------
-    # Step 2.2: Extract documents from hybrid results
+    # Step 2.2: Extract documents
     # --------------------------------------------------
 
     documents = [
         result["document"]
         for result in hybrid_results
     ]
+
+
+    # --------------------------------------------------
+    # Step 2.3: Rerank documents
+    # --------------------------------------------------
+
+    reranked_results = rerank_documents(
+        question,
+        documents,
+        top_k=2
+    )
+
+
+    # --------------------------------------------------
+    # Step 2.4: Extract reranked documents
+    # --------------------------------------------------
+
+    documents = [
+        document
+        for document, score in reranked_results
+    ]
+
+
+    # --------------------------------------------------
+    # Step 2.5: Stop if reranking returns nothing
+    # --------------------------------------------------
+
+    if not documents:
+
+        return FALLBACK_ANSWER, []
 
 
     # --------------------------------------------------
