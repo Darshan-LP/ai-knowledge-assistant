@@ -1,6 +1,5 @@
-
-from retriever import retrieve_documents
-from bm25_store import create_bm25_store, search_bm25
+from app.retriever import retrieve_documents
+from app.bm25_store import load_bm25_index, search_bm25
 
 
 # ======================================================
@@ -12,7 +11,6 @@ BM25_K = 3
 
 HYBRID_K = 3
 
-# Weight given to each retriever
 FAISS_WEIGHT = 0.70
 BM25_WEIGHT = 0.30
 
@@ -24,9 +22,6 @@ HYBRID_THRESHOLD = 0.30
 # ======================================================
 
 def normalize_bm25_scores(results):
-    """
-    Convert BM25 scores into values between 0 and 1.
-    """
 
     if not results:
         return []
@@ -39,6 +34,7 @@ def normalize_bm25_scores(results):
     max_score = max(scores)
 
     if max_score == 0:
+
         return [
             (document, 0)
             for document, _ in results
@@ -65,12 +61,6 @@ def normalize_bm25_scores(results):
 # ======================================================
 
 def normalize_faiss_scores(results):
-    """
-    Convert FAISS distance into a relevance score
-    between 0 and 1.
-
-    Lower distance = more relevant.
-    """
 
     if not results:
         return []
@@ -117,7 +107,7 @@ def normalize_faiss_scores(results):
 def hybrid_retrieve(question):
 
     # --------------------------------------------------
-    # 1. FAISS semantic retrieval
+    # 1. FAISS Retrieval
     # --------------------------------------------------
 
     faiss_results = retrieve_documents(
@@ -127,10 +117,14 @@ def hybrid_retrieve(question):
     )
 
     # --------------------------------------------------
-    # 2. BM25 keyword retrieval
+    # 2. Load BM25 Index
     # --------------------------------------------------
 
-    bm25, chunks = create_bm25_store()
+    bm25, chunks = load_bm25_index()
+
+    # --------------------------------------------------
+    # 3. BM25 Retrieval
+    # --------------------------------------------------
 
     bm25_results = search_bm25(
         question,
@@ -140,7 +134,7 @@ def hybrid_retrieve(question):
     )
 
     # --------------------------------------------------
-    # 3. Normalize scores
+    # 4. Normalize Scores
     # --------------------------------------------------
 
     normalized_faiss = normalize_faiss_scores(
@@ -152,14 +146,12 @@ def hybrid_retrieve(question):
     )
 
     # --------------------------------------------------
-    # 4. Combine results using chunk_id
+    # 5. Combine Results
     # --------------------------------------------------
 
     combined_results = {}
 
-    # --------------------------------------------------
-    # Add FAISS results
-    # --------------------------------------------------
+    # Add FAISS Results
 
     for document, score in normalized_faiss:
 
@@ -183,9 +175,8 @@ def hybrid_retrieve(question):
             chunk_id
         ]["faiss_score"] = score
 
-    # --------------------------------------------------
-    # Add BM25 results
-    # --------------------------------------------------
+
+    # Add BM25 Results
 
     for document, score in normalized_bm25:
 
@@ -209,8 +200,9 @@ def hybrid_retrieve(question):
             chunk_id
         ]["bm25_score"] = score
 
+
     # --------------------------------------------------
-    # 5. Calculate weighted hybrid score
+    # 6. Calculate Hybrid Score
     # --------------------------------------------------
 
     for result in combined_results.values():
@@ -225,8 +217,9 @@ def hybrid_retrieve(question):
 
         result["hybrid_score"] = hybrid_score
 
+
     # --------------------------------------------------
-    # 6. Sort by hybrid score
+    # 7. Sort Results
     # --------------------------------------------------
 
     ranked_results = sorted(
@@ -235,8 +228,9 @@ def hybrid_retrieve(question):
         reverse=True
     )
 
+
     # --------------------------------------------------
-    # 7. Filter low-relevance results
+    # 8. Filter Low-Relevance Results
     # --------------------------------------------------
 
     filtered_results = [
@@ -247,7 +241,7 @@ def hybrid_retrieve(question):
 
 
     # --------------------------------------------------
-    # 8. Return top relevant results
+    # 9. Return Top Results
     # --------------------------------------------------
 
     return filtered_results[:HYBRID_K]
@@ -323,4 +317,3 @@ if __name__ == "__main__":
             print(
                 document.page_content
             )
-

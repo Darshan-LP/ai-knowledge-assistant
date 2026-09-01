@@ -3,8 +3,8 @@ import pickle
 
 from rank_bm25 import BM25Okapi
 
-from chunker import create_chunks
-from loader import load_pdf
+from app.chunker import create_chunks
+from app.loader import load_pdf
 
 
 BM25_STORE_PATH = Path("bm25_store")
@@ -94,34 +94,6 @@ def search_bm25(
 
 if __name__ == "__main__":
 
-    bm25, chunks = create_bm25_store()
+    create_bm25_store()
 
-    question = input(
-        "\nEnter your question: "
-    )
-
-    results = search_bm25(
-        question,
-        bm25,
-        chunks,
-        k=3
-    )
-
-    print("\nBM25 Retrieved Documents:")
-    print("=" * 60)
-
-    for i, (document, score) in enumerate(
-        results,
-        start=1
-    ):
-
-        print(f"\nResult {i}")
-        print("-" * 60)
-
-        print(f"BM25 Score: {score}")
-
-        print("\nContent:")
-        print(document.page_content)
-
-        print("\nMetadata:")
-        print(document.metadata)
+    print("\nBM25 index saved successfully!")

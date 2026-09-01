@@ -1,4 +1,4 @@
-from loader import load_pdf
+from app.loader import load_pdf
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 

@@ -1,7 +1,7 @@
 from langchain_huggingface import HuggingFaceEmbeddings
 
-from chunker import create_chunks
-from loader import load_pdf
+from app.chunker import create_chunks
+from app.loader import load_pdf
 
 
 MODEL_NAME = "models/all-MiniLM-L6-v2"

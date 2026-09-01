@@ -1,4 +1,4 @@
-from llm import create_llm_client
+from app.llm import create_llm_client
 
 
 def transform_query(question):

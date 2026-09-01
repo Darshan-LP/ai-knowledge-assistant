@@ -1,7 +1,7 @@
-from hybrid_retriever import hybrid_retrieve
-from query_transformer import transform_query
-from reranker import rerank_documents
-from llm import create_llm_client
+from app.hybrid_retriever import hybrid_retrieve
+from app.query_transformer import transform_query
+from app.reranker import rerank_documents
+from app.llm import create_llm_client
 
 
 FALLBACK_ANSWER = (

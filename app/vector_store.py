@@ -2,9 +2,9 @@
 
     from langchain_community.vectorstores import FAISS
 
-    from chunker import create_chunks
-    from embeddings import create_embedding_model
-    from loader import load_pdf
+    from app.embeddings import create_embedding_model
+    from app.chunker import create_chunks
+    from app.loader import load_pdf
 
 
     VECTOR_STORE_PATH = Path("vectorstore")

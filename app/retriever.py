@@ -2,7 +2,7 @@ from pathlib import Path
 
 from langchain_community.vectorstores import FAISS
 
-from embeddings import create_embedding_model
+from app.embeddings import create_embedding_model
 
 
 VECTOR_STORE_PATH = Path("vectorstore")
