@@ -68,6 +68,19 @@ def direct_node(state: AgentState):
 
 
 # ======================================================
+# TOOL NODE
+# ======================================================
+
+def tool_node(state: AgentState):
+
+    question = state["question"]
+
+    return {
+        "answer": f"Tool route selected for: {question}"
+    }
+
+
+# ======================================================
 # BUILD LANGGRAPH
 # ======================================================
 
