@@ -6,7 +6,7 @@ from sentence_transformers import CrossEncoder
 # ======================================================
 
 RERANKER_MODEL = (
-    "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    "cross-encoder/ms-marco-MiniLM-L-2-v2"
 )
 
 RERANK_TOP_K = 2
@@ -28,7 +28,9 @@ def load_reranker():
         print("Loading reranker model...")
 
         _reranker = CrossEncoder(
-            RERANKER_MODEL
+            RERANKER_MODEL,
+            device="cpu",
+            max_length=256
         )
 
     return _reranker
@@ -119,7 +121,7 @@ def rerank_documents(
 
 if __name__ == "__main__":
 
-    from hybrid_retriever import hybrid_retrieve
+    from app.hybrid_retriever import hybrid_retrieve
 
 
     question = input(
