@@ -25,6 +25,10 @@ def router_node(state: AgentState):
 
         route = "direct"
 
+    elif "weather" in question:
+
+        route = "tool"
+
     else:
 
         route = "rag"
@@ -109,6 +113,11 @@ def build_graph():
         direct_node
     )
 
+    graph.add_node(
+        "tool",
+        tool_node
+    )
+
     # --------------------------------------------------
     # START → ROUTER
     # --------------------------------------------------
@@ -119,7 +128,7 @@ def build_graph():
     )
 
     # --------------------------------------------------
-    # ROUTER → RAG / DIRECT
+    # ROUTER → RAG / TOOL / DIRECT
     # --------------------------------------------------
 
     graph.add_conditional_edges(
@@ -127,6 +136,7 @@ def build_graph():
         lambda state: state["route"],
         {
             "rag": "rag",
+            "tool": "tool",
             "direct": "direct"
         }
     )
@@ -137,6 +147,15 @@ def build_graph():
 
     graph.add_edge(
         "rag",
+        END
+    )
+
+    # --------------------------------------------------
+    # TOOL → END
+    # --------------------------------------------------
+
+    graph.add_edge(
+        "tool",
         END
     )
 
