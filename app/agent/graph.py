@@ -77,10 +77,28 @@ def direct_node(state: AgentState):
 
 def tool_node(state: AgentState):
 
+    from app.tools import execute_tool
+
     question = state["question"]
 
+    result = execute_tool(
+        question
+    )
+
+    if "error" in result:
+
+        return {
+            "answer": result["error"]
+        }
+
+    answer = (
+        f"Location: {result['location']}\n"
+        f"Temperature: {result['temperature']}\n"
+        f"Condition: {result['condition']}"
+    )
+
     return {
-        "answer": f"Tool route selected for: {question}"
+        "answer": answer
     }
 
 

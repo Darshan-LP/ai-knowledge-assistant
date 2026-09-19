@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
 
-from app.rag_pipeline import generate_rag_answer
+from app.agent.graph import agent_graph
 
 
 app = FastAPI(
@@ -26,34 +26,60 @@ def home():
 @app.post("/ask")
 def ask_question(request: QuestionRequest):
 
-    answer, documents = generate_rag_answer(
-        request.question
+    result = agent_graph.invoke(
+        {
+            "question": request.question,
+            "answer": "",
+            "documents": [],
+            "route": ""
+        }
     )
 
     sources = []
 
-    for document in documents:
+    for document in result.get(
+        "documents",
+        []
+    ):
+
+        source = document.metadata.get(
+            "source",
+            "Unknown"
+        )
+
+        page = document.metadata.get(
+            "page_label",
+            "Unknown"
+        )
+
+        chunk_id = document.metadata.get(
+            "chunk_id",
+            "Unknown"
+        )
 
         sources.append(
             {
-                "source": document.metadata.get(
-                    "source",
-                    "Unknown"
-                ).split("\\")[-1],
+                "source": source.replace(
+                    "\\",
+                    "/"
+                ).split("/")[-1],
 
-                "page": document.metadata.get(
-                    "page_label",
-                    "Unknown"
-                ),
+                "page": page,
 
-                "chunk_id": document.metadata.get(
-                    "chunk_id",
-                    "Unknown"
-                )
+                "chunk_id": chunk_id
             }
         )
 
     return {
-        "answer": answer,
+        "route": result.get(
+            "route",
+            "Unknown"
+        ),
+
+        "answer": result.get(
+            "answer",
+            ""
+        ),
+
         "sources": sources
     }
