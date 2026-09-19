@@ -21,13 +21,36 @@ def router_node(state: AgentState):
 
     question = state["question"].lower().strip()
 
+    # --------------------------------------------------
+    # DIRECT ROUTE
+    # --------------------------------------------------
+
     if question in ["hi", "hello", "hey"]:
 
         route = "direct"
 
+    # --------------------------------------------------
+    # WEATHER TOOL
+    # --------------------------------------------------
+
     elif "weather" in question:
 
         route = "tool"
+
+    # --------------------------------------------------
+    # CALCULATOR TOOL
+    # --------------------------------------------------
+
+    elif (
+        "calculate" in question
+        or "calculator" in question
+    ):
+
+        route = "tool"
+
+    # --------------------------------------------------
+    # RAG ROUTE
+    # --------------------------------------------------
 
     else:
 
@@ -75,6 +98,10 @@ def direct_node(state: AgentState):
 # TOOL NODE
 # ======================================================
 
+# ======================================================
+# TOOL NODE
+# ======================================================
+
 def tool_node(state: AgentState):
 
     from app.tools import execute_tool
@@ -85,20 +112,53 @@ def tool_node(state: AgentState):
         question
     )
 
+    # --------------------------------------------------
+    # TOOL ERROR
+    # --------------------------------------------------
+
     if "error" in result:
 
         return {
             "answer": result["error"]
         }
 
-    answer = (
-        f"Location: {result['location']}\n"
-        f"Temperature: {result['temperature']}\n"
-        f"Condition: {result['condition']}"
-    )
+    # --------------------------------------------------
+    # WEATHER RESULT
+    # --------------------------------------------------
+
+    if "temperature" in result:
+
+        answer = (
+            f"Location: {result['location']}\n"
+            f"Temperature: {result['temperature']}\n"
+            f"Condition: {result['condition']}"
+        )
+
+        return {
+            "answer": answer
+        }
+
+    # --------------------------------------------------
+    # CALCULATOR RESULT
+    # --------------------------------------------------
+
+    if "result" in result:
+
+        answer = (
+            f"Expression: {result['expression']}\n"
+            f"Result: {result['result']}"
+        )
+
+        return {
+            "answer": answer
+        }
+
+    # --------------------------------------------------
+    # UNKNOWN TOOL RESULT
+    # --------------------------------------------------
 
     return {
-        "answer": answer
+        "answer": "Tool executed successfully."
     }
 
 
