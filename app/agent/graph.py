@@ -123,10 +123,10 @@ def tool_node(state: AgentState):
         }
 
     # --------------------------------------------------
-    # WEATHER RESULT
+    # WEATHER TOOL
     # --------------------------------------------------
 
-    if "temperature" in result:
+    if result.get("tool") == "weather":
 
         answer = (
             f"Location: {result['location']}\n"
@@ -139,10 +139,10 @@ def tool_node(state: AgentState):
         }
 
     # --------------------------------------------------
-    # CALCULATOR RESULT
+    # CALCULATOR TOOL
     # --------------------------------------------------
 
-    if "result" in result:
+    if result.get("tool") == "calculator":
 
         answer = (
             f"Expression: {result['expression']}\n"
@@ -154,7 +154,7 @@ def tool_node(state: AgentState):
         }
 
     # --------------------------------------------------
-    # UNKNOWN TOOL RESULT
+    # UNKNOWN TOOL
     # --------------------------------------------------
 
     return {

@@ -5,6 +5,7 @@
 def get_weather():
 
     return {
+        "tool": "weather",
         "location": "Demo Location",
         "temperature": "28°C",
         "condition": "Partly cloudy",
@@ -37,6 +38,7 @@ def calculate(expression: str):
         )
 
         return {
+            "tool": "calculator",
             "expression": expression,
             "result": result,
             "source": "Calculator tool"
@@ -69,15 +71,11 @@ def execute_tool(question: str):
     # CALCULATOR
     # --------------------------------------------------
 
-    if (
-        "calculate" in question
-        or "what is" in question
-    ):
+    if "calculate" in question:
 
         expression = (
             question
             .replace("calculate", "")
-            .replace("what is", "")
             .strip()
         )
 
