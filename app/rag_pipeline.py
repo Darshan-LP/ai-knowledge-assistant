@@ -9,11 +9,18 @@ FALLBACK_ANSWER = (
 )
 
 
+# ======================================================
+# BUILD CONTEXT
+# ======================================================
+
 def build_context(documents):
 
     context_parts = []
 
-    for i, document in enumerate(documents, start=1):
+    for i, document in enumerate(
+        documents,
+        start=1
+    ):
 
         source = document.metadata.get(
             "source",
@@ -41,19 +48,105 @@ Content:
     return "\n".join(context_parts)
 
 
+# ======================================================
+# GROUNDING VALIDATION
+# ======================================================
+
+def validate_grounding(
+    question,
+    answer,
+    context
+):
+
+    client = create_llm_client()
+
+    validation_prompt = f"""
+You are a grounding validator for a document-based AI assistant.
+
+Your job is to determine whether the proposed answer
+is fully supported by the provided sources.
+
+Rules:
+
+1. Use ONLY the provided sources.
+2. Do NOT use outside knowledge.
+3. The answer must be supported by the source content.
+4. If the answer contains information that is not supported
+   by the sources, mark it as NOT GROUNDED.
+5. If the answer is supported by the sources, mark it as GROUNDED.
+6. Respond with ONLY one word:
+
+GROUNDED
+
+or
+
+NOT GROUNDED
+
+
+Retrieved Sources:
+--------------------
+{context}
+--------------------
+
+User Question:
+{question}
+
+Proposed Answer:
+{answer}
+
+Validation:
+"""
+
+    response = client.chat.completions.create(
+        model="gpt-5-nano",
+        messages=[
+            {
+                "role": "user",
+                "content": validation_prompt
+            }
+        ]
+    )
+
+    validation_result = (
+        response
+        .choices[0]
+        .message
+        .content
+        .strip()
+        .upper()
+    )
+
+    print(
+        f"Grounding validation: {validation_result}"
+    )
+
+    return validation_result == "GROUNDED"
+
+
+# ======================================================
+# GENERATE RAG ANSWER
+# ======================================================
+
 def generate_rag_answer(question):
 
     # --------------------------------------------------
     # Step 1: Transform user question
     # --------------------------------------------------
 
-    search_query = transform_query(question)
+    search_query = transform_query(
+        question
+    )
 
-    print(f"\nOriginal Question: {question}")
-    print(f"Search Query: {search_query}")
+    print(
+        f"\nOriginal Question: {question}"
+    )
+
+    print(
+        f"Search Query: {search_query}"
+    )
 
 
-   # --------------------------------------------------
+    # --------------------------------------------------
     # Step 2: Hybrid Retrieval
     # --------------------------------------------------
 
@@ -193,13 +286,54 @@ Answer:
     # --------------------------------------------------
 
     answer = (
-        response
-        .choices[0]
-        .message
-        .content
-        .strip()
+    response
+    .choices[0]
+    .message
+    .content
+    .strip()
     )
 
+# --------------------------------------------------
+# FALLBACK ANSWER
+# --------------------------------------------------
+
+    if answer == FALLBACK_ANSWER:
+
+        print(
+            "Fallback answer detected. "
+            "Skipping grounding validation."
+        )
+
+        return answer, documents
+
+
+    # --------------------------------------------------
+    # GROUNDING VALIDATION
+    # --------------------------------------------------
+
+    is_grounded = validate_grounding(
+        question,
+        answer,
+        context
+    )
+
+
+    # --------------------------------------------------
+    # Step 8: Reject unsupported answer
+    # --------------------------------------------------
+
+    if not is_grounded:
+
+        print(
+            "Answer rejected because it was not grounded."
+        )
+
+        return FALLBACK_ANSWER, documents
+
+
+    # --------------------------------------------------
+    # Step 9: Return validated answer
+    # --------------------------------------------------
 
     return answer, documents
 
@@ -214,24 +348,20 @@ if __name__ == "__main__":
         "Enter your question: "
     )
 
-
     answer, documents = generate_rag_answer(
         question
     )
 
-
     print("\nQuestion:")
     print(question)
 
-
     print("\nRAG Answer:")
     print("=" * 60)
-    print(answer)
 
+    print(answer)
 
     print("\nSources:")
     print("=" * 60)
-
 
     if documents:
 
