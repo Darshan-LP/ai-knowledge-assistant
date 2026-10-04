@@ -1,8 +1,12 @@
 from app.loader import load_pdf
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
 def create_chunks(documents):
+
+    # Import only when chunking is actually needed.
+    from langchain_text_splitters import (
+        RecursiveCharacterTextSplitter
+    )
 
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=700,
@@ -17,6 +21,7 @@ def create_chunks(documents):
     )
 
     chunks = text_splitter.split_documents(documents)
+
     for i, chunk in enumerate(chunks):
         chunk.metadata["chunk_id"] = i
 
@@ -33,8 +38,9 @@ if __name__ == "__main__":
 
     print("\n--- Chunks ---\n")
 
-    for i, chunk in enumerate(chunks):
-        print(f"\nChunk {i + 1}")
+    for i, chunk in enumerate(chunks, start=1):
+
+        print(f"\nChunk {i}")
         print("-" * 50)
         print("Chunk ID:", chunk.metadata.get("chunk_id"))
         print("Source:", chunk.metadata.get("source"))

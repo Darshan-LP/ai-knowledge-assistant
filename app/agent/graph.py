@@ -44,6 +44,7 @@ def router_node(state: AgentState):
     elif (
         "calculate" in question
         or "calculator" in question
+        or "employee" in question
     ):
 
         route = "tool"
@@ -102,32 +103,23 @@ def direct_node(state: AgentState):
 # TOOL NODE
 # ======================================================
 
+
 def tool_node(state: AgentState):
 
     from app.tools import execute_tool
 
     question = state["question"]
 
-    result = execute_tool(
-        question
-    )
+    result = execute_tool(question)
 
-    # --------------------------------------------------
     # TOOL ERROR
-    # --------------------------------------------------
-
     if "error" in result:
-
         return {
             "answer": result["error"]
         }
 
-    # --------------------------------------------------
     # WEATHER TOOL
-    # --------------------------------------------------
-
     if result.get("tool") == "weather":
-
         answer = (
             f"Location: {result['location']}\n"
             f"Temperature: {result['temperature']}\n"
@@ -138,12 +130,8 @@ def tool_node(state: AgentState):
             "answer": answer
         }
 
-    # --------------------------------------------------
     # CALCULATOR TOOL
-    # --------------------------------------------------
-
     if result.get("tool") == "calculator":
-
         answer = (
             f"Expression: {result['expression']}\n"
             f"Result: {result['result']}"
@@ -153,12 +141,24 @@ def tool_node(state: AgentState):
             "answer": answer
         }
 
-    # --------------------------------------------------
-    # UNKNOWN TOOL
-    # --------------------------------------------------
+    # DATABASE TOOL
+    if result.get("tool") == "database":
+        employee = result["data"]
 
+        answer = (
+            f"Employee ID: {employee['employee_id']}\n"
+            f"Name: {employee['name']}\n"
+            f"Department: {employee['department']}\n"
+            f"Designation: {employee['designation']}"
+        )
+
+        return {
+            "answer": answer
+        }
+
+    # UNKNOWN TOOL
     return {
-        "answer": "Tool executed successfully."
+        "answer": "Unsupported tool result."
     }
 
 
