@@ -4,13 +4,18 @@ from pydantic import BaseModel
 from app.agent.graph import agent_graph
 from app.auth.dependencies import get_current_user
 from app.auth.routes import router as auth_router
+from app.chat import router as chat_router
+
 
 app = FastAPI(
     title="AI Knowledge Assistant API",
     version="1.0.0"
 )
 
+
 app.include_router(auth_router)
+app.include_router(chat_router)
+
 
 class QuestionRequest(BaseModel):
 
