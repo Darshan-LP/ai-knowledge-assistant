@@ -8,3 +8,4 @@ vectorstore/
 .idea/
 models/
 bm25_store/
+.pytest_cache/

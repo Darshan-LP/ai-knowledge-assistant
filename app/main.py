@@ -5,26 +5,27 @@ from app.agent.graph import agent_graph
 from app.auth.dependencies import get_current_user
 from app.auth.routes import router as auth_router
 from app.chat import router as chat_router
+from app.logging_config import setup_logging, logger
 
+# Initialize structured application logging
+setup_logging()
+logger.info("Starting AI Knowledge Assistant API server...")
 
 app = FastAPI(
     title="AI Knowledge Assistant API",
     version="1.0.0"
 )
 
-
 app.include_router(auth_router)
 app.include_router(chat_router)
 
 
 class QuestionRequest(BaseModel):
-
     question: str
 
 
 @app.get("/")
 def home():
-
     return {
         "message": "AI Knowledge Assistant API is running"
     }
@@ -35,6 +36,8 @@ def ask_question(
     request: QuestionRequest,
     current_user: dict = Depends(get_current_user)
 ):
+    logger.info(f"Received /ask query from user: {current_user['username']}")
+
     result = agent_graph.invoke(
         {
             "question": request.question,
@@ -45,22 +48,10 @@ def ask_question(
     )
 
     sources = []
-
     for document in result.get("documents", []):
-        source = document.metadata.get(
-            "source",
-            "Unknown"
-        )
-
-        page = document.metadata.get(
-            "page_label",
-            "Unknown"
-        )
-
-        chunk_id = document.metadata.get(
-            "chunk_id",
-            "Unknown"
-        )
+        source = document.metadata.get("source", "Unknown")
+        page = document.metadata.get("page_label", "Unknown")
+        chunk_id = document.metadata.get("chunk_id", "Unknown")
 
         sources.append(
             {
