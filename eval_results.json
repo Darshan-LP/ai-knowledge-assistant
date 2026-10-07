@@ -1,0 +1,22 @@
+[
+  {
+    "test_id": 1,
+    "question": "What is the purpose of this AI assistant?",
+    "status_code": 401,
+    "latency_seconds": 0.015,
+    "relevance_score": 0.0,
+    "matched_keywords": [],
+    "answer_preview": "Status 401: {\"detail\":\"Not authenticated\"}"
+  },
+  {
+    "test_id": 2,
+    "question": "How does authentication work in the system?",
+    "status_code": 401,
+    "latency_seconds": 0.008,
+    "relevance_score": 0.2,
+    "matched_keywords": [
+      "auth"
+    ],
+    "answer_preview": "Status 401: {\"detail\":\"Not authenticated\"}"
+  }
+]
